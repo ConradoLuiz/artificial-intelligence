@@ -17,6 +17,7 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
+from random import sample
 import util
 
 class SearchProblem:
@@ -113,12 +114,43 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    frontier = util.Stack()
+    frontier.push((problem.getStartState(), []))
+    expanded = set()
+
+    while not frontier.isEmpty():
+        state, path = frontier.pop()
+        if problem.isGoalState(state):
+            return path
+
+        if not state in expanded:
+            expanded.add(state)
+
+            for child in problem.expand(state):
+                next_state, direction, cost = child
+                frontier.push((next_state, path+[direction]))
+
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    
+    frontier = util.Queue()
+    frontier.push((problem.getStartState(), []))
+    expanded = set()
+
+    while not frontier.isEmpty():
+        state, path = frontier.pop()
+        if problem.isGoalState(state):
+            return path
+
+        if not state in expanded:
+            expanded.add(state)
+
+            for child in problem.expand(state):
+                next_state, direction, cost = child
+                frontier.push((next_state, path+[direction]))
 
 def nullHeuristic(state, problem=None):
     """
@@ -130,8 +162,24 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    
+    frontier = util.PriorityQueue()
+    start = problem.getStartState()
+    frontier.push( (start, [], 0), 0 )
+    expanded = set()
 
+    while not frontier.isEmpty():
+        state, path, priority = frontier.pop()
+        if problem.isGoalState(state):
+            return path
+
+        if not state in expanded:
+            expanded.add(state)
+
+            for child in problem.expand(state):
+                next_state, direction, cost = child
+                frontier.push((next_state, path+[direction], priority+cost), heuristic(next_state, problem) + priority + cost)
+    
 
 # Abbreviations
 bfs = breadthFirstSearch
