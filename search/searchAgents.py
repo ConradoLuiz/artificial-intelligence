@@ -315,14 +315,24 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # util.raiseNotDefined()
+        return (self.startingPosition, self.corners)
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # util.raiseNotDefined()
+        
+        position, corners = state
+
+        if position not in corners: return False
+        else:
+            if len(corners) == 1:
+                return True
+
+
 
     def expand(self, state):
         """
@@ -334,13 +344,20 @@ class CornersProblem(search.SearchProblem):
             state, 'action' is the action required to get there, and 'stepCost'
             is the incremental cost of expanding to that child
         """
-
+        position, corners = state
         children = []
         for action in self.getActions(state):
             # Add a child state to the child list if the action is legal
             # You should call getActions, getActionCost, and getNextState.
             "*** YOUR CODE HERE ***"
+            next_state = self.getNextState(state, action)
+            action_cost = self.getActionCost(state, action, next_state)
 
+            if position in corners:
+                next_state = (next_state[0], tuple([pos for pos in corners if pos != position]))
+
+            children.append( (next_state, action, action_cost) )
+            
         self._expanded += 1 # DO NOT CHANGE
         return children
 
@@ -367,9 +384,9 @@ class CornersProblem(search.SearchProblem):
         dx, dy = Actions.directionToVector(action)
         nextx, nexty = int(x + dx), int(y + dy)
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # util.raiseNotDefined()
         # you will need to replace the None part of the following tuple.
-        return ((nextx, nexty), None)
+        return ((nextx, nexty), state[1])
 
     def getCostOfActionSequence(self, actions):
         """
@@ -402,7 +419,14 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+
+    position, corners_left = state
+    distance = -1
+    for c in corners_left:
+        d = util.manhattanDistance(position, c)
+        if d > distance:
+            distance = d
+    return distance 
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
