@@ -421,7 +421,7 @@ def cornersHeuristic(state, problem):
     "*** YOUR CODE HERE ***"
 
     position, corners_left = state
-    distance = -1
+    distance = 0
     for c in corners_left:
         d = util.manhattanDistance(position, c)
         if d > distance:
