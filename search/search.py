@@ -169,7 +169,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     expanded = set()
 
     while not frontier.isEmpty():
-        state, path, priority = frontier.pop()
+        state, path, cost = frontier.pop()
         if problem.isGoalState(state):
             return path
 
@@ -177,8 +177,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             expanded.add(state)
 
             for child in problem.expand(state):
-                next_state, direction, cost = child
-                frontier.push((next_state, path+[direction], priority+cost), heuristic(next_state, problem) + priority + cost)
+                next_state, direction, next_cost = child
+                frontier.push((next_state, path+[direction], cost+next_cost), heuristic(next_state, problem) + cost + next_cost)
     
 
 # Abbreviations
