@@ -324,7 +324,7 @@ class CornersProblem(search.SearchProblem):
         """
         "*** YOUR CODE HERE ***"
         # util.raiseNotDefined()
-        
+
         position, corners = state
 
         if position not in corners: return False
@@ -542,7 +542,23 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    
+    distances = []
+
+    for x in range(foodGrid.width):
+        for y in range(foodGrid.height):
+            if foodGrid[x][y] == True:
+                # Com manhattanDistance, ele recebe 3/4
+                # d = util.manhattanDistance(position, (x,y))
+
+                # Com mazeDistance, recebe 5/4, porém, demora muito mais. Para cada chamada de mazeDistance, ela chama um bfs com um PositionSearchProblem
+                d = mazeDistance(position, (x,y), problem.startingGameState)
+                distances.append(d)
+
+    if not distances:
+        return 0
+
+    return max(distances)
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -573,7 +589,7 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return search.astar(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -609,7 +625,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.food[x][y] # retorna um boolean indicando se tem comida nessa posição
 
 def mazeDistance(point1, point2, gameState):
     """
