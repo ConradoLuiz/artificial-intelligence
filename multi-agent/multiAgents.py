@@ -69,12 +69,62 @@ class ReflexAgent(Agent):
         # Useful information you can extract from a GameState (pacman.py)
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
+        oldFood = currentGameState.getFood()
         newFood = successorGameState.getFood()
+        newFoodList = newFood.asList()
         newGhostStates = successorGameState.getGhostStates()
+        ghostPositions = successorGameState.getGhostPositions()
+
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+
+        # print('Successor game state:\n', successorGameState)
+        # print('Pacman current position: ', newPos)
+        # print('oldFood:\n', oldFood)
+        # print('newFood:\n', newFood)
+        # print('ghostPositions: ', ghostPositions)
+        # print('successorGameState.score: ', successorGameState.getScore())
+        # print('newGhostStates: ', newGhostStates)
+        # print('newScaredTimes: ', newScaredTimes)
+        # input()
+
+        # computa distância para o fantasma mais próximo.
+        minDistanceGhost = float("+inf")
+        for ghostPos in ghostPositions:
+            minDistanceGhost = min(minDistanceGhost, util.manhattanDistance(newPos, ghostPos))
+
+
+        # se a acao selecionada leva à colisão com o ghost, pontuação é mínima
+        if minDistanceGhost == 0:
+            return float("-inf")
+
+        # se a acao conduzir para a vitoria, pontuação é máxima
+        if successorGameState.isWin():
+            return float("+inf")
+
+        
+        score = successorGameState.getScore()
+        # incentiva acao que conduz o agente para mais longe do fantasma mais próximo
+        score += 2 * minDistanceGhost
+
+        minDistanceFood = float("+inf")
+        for foodPos in newFoodList:
+            minDistanceFood = min(minDistanceFood, util.manhattanDistance(foodPos, newPos))
+
+        # incentiva acao que conduz o agente para mais perto da comida mais próxima
+        score -= 2 * minDistanceFood
+
+        
+        # incentiva acao que leva a uma comida
+        if(successorGameState.getNumFood() < currentGameState.getNumFood()):
+            score += 5
+
+        # penaliza as acoes de parada
+        if action == Directions.STOP:
+            score -= 10
+
+        return score
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -135,7 +185,60 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        minimax = self.minimax(gameState, agentIndex=0, depth=self.depth)
+
+        return minimax['action']
+
+    def minimax(self, gameState, agentIndex=0, depth='2', action=Directions.STOP):
+        agentIndex = agentIndex % gameState.getNumAgents()
+
+        if agentIndex == 0: 
+            depth = depth-1
+
+        if gameState.isWin() or gameState.isLose() or depth == -1:
+            return {'value':self.evaluationFunction(gameState), 'action':action}
+
+        else:
+            if agentIndex==0: 
+                return self.maxValue(gameState,agentIndex,depth)
+            else: 
+                return self.minValue(gameState,agentIndex,depth)
+
+    def maxValue(self, gameState, agentIndex, depth):
+        v = {'value':float('-inf'), 'action':Directions.STOP}
+        legalMoves = gameState.getLegalActions(agentIndex)        
+
+        for action in legalMoves:
+
+            if action == Directions.STOP: 
+                continue
+
+            successorGameState = gameState.generateSuccessor(agentIndex, action) 
+            successorMinMax = self.minimax(successorGameState, agentIndex+1, depth, action)
+
+            if v['value'] <= successorMinMax['value']:
+                v['value'] = successorMinMax['value']
+                v['action'] = action
+
+        return v
+
+    def minValue(self, gameState, agentIndex, depth):
+        v = {'value': float('inf'), 'action': Directions.STOP}
+        legalMoves = gameState.getLegalActions(agentIndex)
+
+        for action in legalMoves:
+
+            if action == Directions.STOP: 
+                continue
+
+            successorGameState = gameState.generateSuccessor(agentIndex, action)
+            successorMinMax = self.minimax(successorGameState, agentIndex+1, depth, action)
+
+            if v['value'] >= successorMinMax['value']:
+                v['value'] = successorMinMax['value']
+                v['action'] = action
+
+        return v
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -147,7 +250,69 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        inf = float('inf')
+        minimax = self.minimax(gameState, agentIndex=0, depth=self.depth, alpha=-inf, beta=inf)
+
+        return minimax['action']
+
+    def minimax(self, gameState, agentIndex=0, depth='2', action=Directions.STOP, alpha=-float('inf'), beta=float('inf')):
+        agentIndex = agentIndex % gameState.getNumAgents()
+        
+        if agentIndex == 0: 
+            depth = depth-1
+
+        if gameState.isWin() or gameState.isLose() or depth == -1:
+            return {'value':self.evaluationFunction(gameState), 'action':action}
+
+        else:
+            if agentIndex==0: 
+                return self.maxValue(gameState,agentIndex,depth, alpha, beta)
+            else: 
+                return self.minValue(gameState,agentIndex,depth, alpha, beta)
+
+    def maxValue(self, gameState, agentIndex, depth, alpha, beta):
+        v = {'value':float('-inf'), 'action':Directions.STOP}
+        legalMoves = gameState.getLegalActions(agentIndex)        
+
+        for action in legalMoves:
+
+            if action == Directions.STOP: 
+                continue
+
+            successorGameState = gameState.generateSuccessor(agentIndex, action) 
+            successorMinMax = self.minimax(successorGameState, agentIndex+1, depth, action, alpha, beta)
+
+            if v['value'] <= successorMinMax['value']:
+                v['value'] = successorMinMax['value']
+                v['action'] = action
+
+            if v['value'] > beta: 
+                return v
+            
+            alpha = max(alpha, v['value'])
+
+        return v
+
+    def minValue(self, gameState, agentIndex, depth, alpha, beta):
+        v = {'value':float('inf'), 'action':Directions.STOP}
+        legalMoves = gameState.getLegalActions(agentIndex)
+
+        for action in legalMoves:
+            if action == Directions.STOP: 
+                continue
+
+            successorGameState = gameState.generateSuccessor(agentIndex, action)
+            successorMinMax = self.minimax(successorGameState, agentIndex+1, depth, action, alpha, beta)
+
+            if v['value'] >= successorMinMax['value']:
+                v['value'] = successorMinMax['value']
+                v['action'] = action
+
+            if v['value'] <= alpha: return v
+
+            beta = min(beta, v['value'])
+
+        return v
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """

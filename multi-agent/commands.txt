@@ -1,0 +1,6 @@
+py pacman.py -p ReflexAgent
+py pacman.py -p ReflexAgent -l testClassic
+py autograder.py -t test_cases/q2/0-small-tree
+py pacman.py --frameTime 0 -p ReflexAgent -k 1
+py autograder.py -q q1
+py autograder.py -q q1 --no-graphics
