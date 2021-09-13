@@ -341,50 +341,63 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        depth = 0
-        return self.getMaxValue(gameState, depth)[1]
+        depth = self.depth
+        minimax = self.expectimax(gameState, 0, depth, Directions.STOP)
 
-    def getMaxValue(self, gameState, depth, agent = 0):
-        actions = gameState.getLegalActions(agent)
+        return minimax['action']
 
-        if not actions or gameState.isWin() or depth >= self.depth:
-            return self.evaluationFunction(gameState), Directions.STOP
+    def expectimax(self, gameState, agentIndex, depth, action):
+        agentIndex = agentIndex % gameState.getNumAgents()
 
-        successorCost = float('-inf')
-        successorAction = Directions.STOP
+        if agentIndex == 0: 
+            depth = depth-1
 
-        for action in actions:
-            successor = gameState.generateSuccessor(agent, action)
+        if gameState.isWin() or gameState.isLose() or depth == -1:
+            return {'value':self.evaluationFunction(gameState), 'action':action}
+        
+        if agentIndex==0: 
+            return self.maxValue(gameState,agentIndex,depth)
+        else: 
+            return self.minValue(gameState,agentIndex,depth)  
 
-            cost = self.getMinValue(successor, depth, agent + 1)[0]
+    def maxValue(self, gameState, agentIndex, depth):
 
-            if cost > successorCost:
-                successorCost = cost
-                successorAction = action
+        v = {'value': float('-inf'), 'action': Directions.STOP}
 
-        return successorCost, successorAction
+        legalMoves = gameState.getLegalActions(agentIndex)        
 
-    def getMinValue(self, gameState, depth, agent):
-        actions = gameState.getLegalActions(agent)
+        for action in legalMoves:
+
+            if action == Directions.STOP: 
+                continue
+
+            successorGameState = gameState.generateSuccessor(agentIndex, action) 
+
+            successorExpectiMax = self.expectimax(successorGameState, agentIndex+1, depth, action)
+
+            if v['value'] <= successorExpectiMax['value']:
+                v['value'] = successorExpectiMax['value']
+                v['action'] = action
+
+        return v
+
+    def minValue(self, gameState, agentIndex, depth):
+        actions = gameState.getLegalActions(agentIndex)
 
         if not actions or gameState.isLose() or depth >= self.depth:
-            return self.evaluationFunction(gameState), None
+            return {'value':self.evaluationFunction(gameState), 'action': Directions.STOP}
 
         successorCosts = []
 
         for action in actions:
-            successor = gameState.generateSuccessor(agent, action)
+            successorGameState = gameState.generateSuccessor(agentIndex, action)
 
-            cost = 0
+            v = self.expectimax(successorGameState, agentIndex+1, depth, action)
 
-            if agent == gameState.getNumAgents() - 1:
-                cost = self.getMaxValue(successor, depth + 1)[0]
-            else:
-                cost = self.getMinValue(successor, depth, agent + 1)[0]
+            successorCosts.append(v['value'])
 
-            successorCosts.append(cost)
-
-        return sum(successorCosts) / float(len(successorCosts)), None
+        return {'value': sum(successorCosts) / float(len(successorCosts)), 'action': Directions.STOP}
+        
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -397,7 +410,6 @@ def betterEvaluationFunction(currentGameState):
 
     # prioriza o estado que leva à vitória
     if currentGameState.isWin():
-
         return float("+inf")
 
     
@@ -405,13 +417,10 @@ def betterEvaluationFunction(currentGameState):
     if currentGameState.isLose():
         return float("-inf")
 
-    
-
     # variáveis a serem usadas na cálculo da função de avaliação
     score = scoreEvaluationFunction(currentGameState)
     newFoodList = currentGameState.getFood().asList()
     newPos = currentGameState.getPacmanPosition()
-
 
 
     #
@@ -423,23 +432,18 @@ def betterEvaluationFunction(currentGameState):
     ghostStates = currentGameState.getGhostStates()
     scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]        
 
-    
-
     # calcula distância entre o agente e a pílula mais próxima
     minDistanceFood = float("+inf")
 
     for foodPos in newFoodList:
         minDistanceFood = min(minDistanceFood, util.manhattanDistance(foodPos, newPos))
 
-        
 
     # incentiva o agente a se aproximar mais da pílula mais próxima
     score -= 2 * minDistanceFood
 
-    
     # incentiva o agente a comer pílulas 
     score -= 4 * len(newFoodList)
-
 
     # incentiva o agente a se mover para príximo das cápsulas
     capsulelocations = currentGameState.getCapsules()
