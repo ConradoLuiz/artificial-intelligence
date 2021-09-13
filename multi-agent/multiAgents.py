@@ -277,9 +277,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         legalMoves = gameState.getLegalActions(agentIndex)
 
-        if not legalMoves or gameState.isWin() or depth >= self.depth:
-            return {'value':self.evaluationFunction(gameState), 'action': Directions.STOP}
-
         for action in legalMoves:
 
             if action == Directions.STOP: continue
@@ -304,9 +301,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         v = {'value':float('inf'), 'action':Directions.STOP}
 
         legalMoves = gameState.getLegalActions(agentIndex)
-
-        if not legalMoves or gameState.isLose() or depth >= self.depth:
-            return {'value':self.evaluationFunction(gameState), 'action': Directions.STOP}
 
         for action in legalMoves:
 
@@ -383,9 +377,6 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
     def minValue(self, gameState, agentIndex, depth):
         actions = gameState.getLegalActions(agentIndex)
-
-        if not actions or gameState.isLose() or depth >= self.depth:
-            return {'value':self.evaluationFunction(gameState), 'action': Directions.STOP}
 
         successorCosts = []
 
